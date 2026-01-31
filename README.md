@@ -1,81 +1,71 @@
-# 🏥 EHR Data Quality & Patient Flow QA Checklist
+# 🏥 # EHR Data Quality Checklist (Notebook + CLI)
 
-## Overview
-This repository contains a **Jupyter notebook demonstrating a practical data quality (QA) workflow for Electronic Health Record (EHR)–style datasets**.
-
-Rather than jumping straight into modelling, this project focuses on **trust-building steps that must happen first** in healthcare analytics:
-- missingness assessment
-- domain-aware data cleaning
-- time feature engineering
-- outlier quality assurance
-
-The notebook is designed to reflect **real-world healthcare analytics practices**, where data quality issues are often silent but impactful.
+A practical data quality (QA) framework for Electronic Health Record (EHR) datasets, combining an exploratory Jupyter notebook with a reproducible command-line tool. This project focuses on identifying and documenting common data risks in healthcare datasets prior to analysis or modelling.
 
 ---
 
-## Why This Project Matters
-In healthcare, analytics failures rarely come from “bad models.”  
-They come from **data that looks good enough but isn’t trustworthy**.
+## Why This Project Exists
 
-This notebook shows how to:
-- detect workflow-driven missingness
-- handle censored clinical fields (e.g. age values like `>89`)
-- engineer time-based patient flow features
-- treat outliers as clinical signals, not automatic errors
+EHR datasets often appear analysis-ready but contain silent issues that can bias results or invalidate conclusions, including:
+- systematic missingness
+- censored clinical values (e.g. `>89` for age)
+- inconsistent timestamps
+- implausible measurements
+- duplicate patient stays
 
 The emphasis is on **governance, interpretability, and decision safety**.
 
 ---
 
-## Dataset Context
-- **Type:** Simulated / de-identified patient encounter data  
-- **Granularity:** Encounter-level (not patient-level)  
-- **Domain:** Admissions, unit transfers, demographics, timestamps  
+## What’s Included
 
-> ⚠️ No real patient-identifiable data is included.
+### 1) Exploratory Notebook
+**`notebooks/ehr-qa-checklist.ipynb`**
 
----
+The notebook demonstrates:
+- missingness analysis and visualisation
+- handling censored age values
+- time-of-day feature engineering from EHR `*time24` fields
+- IQR-based outlier flagging (outliers flagged, not dropped)
+- interpretation of anomalies in a healthcare context
 
-## Key Steps in the Notebook
-1. **Initial data inspection**
-   - Shape, data types, required fields
-2. **Missingness audit**
-   - Quantitative summaries
-   - Visual missingness matrix
-3. **Domain-aware cleaning**
-   - Safe handling of censored ages (`>89`)
-4. **Patient flow feature engineering**
-   - Timestamp parsing
-   - Hour-of-day extraction
-5. **Exploratory analysis**
-   - Distributions and correlations
-6. **Outlier QA**
-   - IQR-based flagging (not blind removal)
-7. **Reusable QA summary**
-   - Consolidated reporting for repeat use
+This notebook is intended for:
+- exploration
+- validation
+- documentation of assumptions
 
 ---
 
-## Skills Demonstrated
-- Healthcare data quality assessment
-- EHR-specific data cleaning
-- Patient flow analytics
-- Reusable analytics functions
-- Governance-aware analytical thinking
-- Clear technical communication
+### 2) Reproducible CLI Tool
+**`run_qa.py`**
+
+The CLI turns the notebook logic into a reusable QA utility that can be run on any EHR-style CSV.
+
+It produces:
+- a structured JSON QA report
+- a cleaned dataset
+- per-column outlier flags
+- optional QA plots
 
 ---
 
-## Who This Is For
-- Healthcare analysts and BI professionals
-- Data scientists working with EHR or operational data
-- Beginners transitioning into healthcare analytics
-- Recruiters reviewing real-world portfolio work
+## Quickstart (CLI)
 
----
+### Requirements
+- Python 3.10+
+```
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
 
-## How to Run the Notebook
-1. Clone this repository
-2. Install dependencies (example):
-   ```bash
-   pip install pandas numpy matplotlib seaborn missingno
+## Run QA checks
+```
+python run_qa.py \
+  --input data/EHR.csv \
+  --outdir outputs \
+  --age-col age \
+  --time-col hospitaladmittime24 \
+  --id-cols uniquepid,patientunitstayid,patienthealthsystemstayid \
+  --outlier-cols admissionheight,admissionweight,dischargeweight,hospitaladmitoffset,hospitaldischargeoffset,unitdischargeoffset \
+  --save-plots
+```
